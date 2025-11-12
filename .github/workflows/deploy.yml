@@ -1,4 +1,4 @@
-name: Deploy Angular App to GitHub Pages
+name: Build and Deploy Angular to GitHub Pages
 
 on:
   push:
@@ -6,32 +6,23 @@ on:
     paths:
       - 'src/**'
       - 'angular.json'
-      - 'package.json'
-      - 'package-lock.json'
+      - 'package*.json'
       - 'tsconfig*.json'
       - '.github/workflows/deploy.yml'
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
+  contents: write
 
 jobs:
-  build-and-deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout main branch
         uses: actions/checkout@v4
+        with:
+          ref: main
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -45,14 +36,10 @@ jobs:
       - name: Build Angular app
         run: npm run build -- --configuration production --base-href /russian-learning/
 
-      - name: Setup GitHub Pages
-        uses: actions/configure-pages@v4
-
-      - name: Upload build output
-        uses: actions/upload-pages-artifact@v3
+      - name: Deploy to gh-pages branch
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
-          path: dist/russian-learning/browser
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          branch: gh-pages
+          folder: dist/russian-learning/browser
+          clean: true
+          commit-message: "🚀 Auto-deploy from main"
